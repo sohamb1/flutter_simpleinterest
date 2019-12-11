@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(MaterialApp(
       title: 'Simple Interest Calcuclator',
+      debugShowCheckedModeBanner: false,
       home: SiForm(),
+      theme: ThemeData(
+          brightness: Brightness.dark,
+          primaryColor: Colors.indigo,
+          accentColor: Colors.indigoAccent),
     ));
 
 class SiForm extends StatefulWidget {
@@ -14,8 +19,15 @@ class SiForm extends StatefulWidget {
 }
 
 class _SiFormState extends State {
+  TextEditingController principalController = TextEditingController();
+  TextEditingController roiController = TextEditingController();
+  TextEditingController termController = TextEditingController();
+
+  var displayText = "";
+
   @override
   Widget build(BuildContext context) {
+    TextStyle textStyle = Theme.of(context).textTheme.title;
     // TODO: implement build
     return Scaffold(
       // resizeToAvoidBottomPadding: false,
@@ -30,9 +42,12 @@ class _SiFormState extends State {
                   padding: EdgeInsets.only(top: 40.0, bottom: 10.0),
                   child: TextField(
                     keyboardType: TextInputType.number,
+                    style: textStyle,
+                    controller: principalController,
                     decoration: InputDecoration(
                         labelText: 'Principal',
                         hintText: 'Enter Prinicipal e.g 50000',
+                        labelStyle: textStyle,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(5.0))),
                   )),
@@ -40,9 +55,12 @@ class _SiFormState extends State {
                   padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
                   child: TextField(
                     keyboardType: TextInputType.number,
+                    style: textStyle,
+                    controller: roiController,
                     decoration: InputDecoration(
                         labelText: 'Rate of Interest',
                         hintText: 'Enter Rate of Interest e.g 10',
+                        labelStyle: textStyle,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(5.0))),
                   )),
@@ -53,9 +71,12 @@ class _SiFormState extends State {
                       Expanded(
                           child: TextField(
                         keyboardType: TextInputType.number,
+                        style: textStyle,
+                        controller: termController,
                         decoration: InputDecoration(
                             labelText: 'Number of Years',
                             hintText: 'Enter years e.g 5',
+                            labelStyle: textStyle,
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(5.0))),
                       )),
@@ -69,29 +90,35 @@ class _SiFormState extends State {
                   children: <Widget>[
                     Expanded(
                       child: RaisedButton(
-                        color: Colors.deepPurple,
+                        color: Theme.of(context).accentColor,
+                        textColor: Theme.of(context).primaryColor,
                         child: Text(
                           'Submit',
-                          style: TextStyle(
-                              fontSize: 20.0, decoration: TextDecoration.none,
-                              color: Colors.white)
+                          textScaleFactor: 1.5,
                         ),
                         elevation: 6.0,
-                        onPressed: () => calculateInterest(context),
+                        onPressed: () {
+                          setState(() {
+                            displayText = _calculateInterest(context);
+                          });
+                        },
                       ),
                     ),
-                    Container( width: 10.0),
+                    Container(width: 10.0),
                     Expanded(
                       child: RaisedButton(
-                        color: Colors.deepPurple,
+                        color: Theme.of(context).primaryColorDark,
+                        textColor: Theme.of(context).primaryColorLight,
                         child: Text(
                           'Reset',
-                          style: TextStyle(
-                              fontSize: 20.0, decoration: TextDecoration.none,
-                          color: Colors.white),
+                          textScaleFactor: 1.5,
                         ),
                         elevation: 6.0,
-                        onPressed: () => calculateInterest(context),
+                        onPressed: (){
+                          setState(() {
+                            _reset();
+                          });
+                        },
                       ),
                     )
                   ],
@@ -99,19 +126,29 @@ class _SiFormState extends State {
               ),
               Padding(
                 padding: EdgeInsets.only(top: 10, bottom: 10),
-                child: Text(
-                    'text',
-                  textAlign: TextAlign.center
-                ),
+                child: Text(displayText, textAlign: TextAlign.center),
               )
             ],
           )),
     );
   }
-}
 
-void calculateInterest(BuildContext context) {
+  String _calculateInterest(BuildContext context) {
+    double principal = double.parse(principalController.text);
+    double roi = double.parse(roiController.text);
+    double term = double.parse(termController.text);
 
+    double amount = principal + (principal * roi * term) / 100;
+    String result = 'After $term years, your amount will be $amount';
+    return result;
+  }
+
+  void _reset() {
+    principalController.text = "";
+    roiController.text = "";
+    termController.text = "";
+    displayText = "";
+  }
 }
 
 class TopImage extends StatelessWidget {
@@ -136,7 +173,13 @@ class DropDownCurrencies extends StatefulWidget {
 
 class _DropDownCurrenciesState extends State {
   var _currencies = ['Rupees', 'Dollar', 'Pound'];
-  var _selectedCurrency = 'Rupees';
+  var _selectedCurrency = '';
+
+  @override
+  void initState() {
+    _selectedCurrency = _currencies[0];
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,16 +187,13 @@ class _DropDownCurrenciesState extends State {
       child: DropdownButton<String>(
         items: _currencies.map((String currency) {
           return DropdownMenuItem<String>(
-            value: currency,
-            child: Container(
-              child: Row(
-                children: <Widget>[Icon(Icons.arrow_right), Text(currency)],
-              ),
-            ),
-          );
+              value: currency,
+              child: Text(currency, style: Theme.of(context).textTheme.title));
         }).toList(),
         onChanged: (String selectedCurrency) {
-          this._selectedCurrency = selectedCurrency;
+          setState(() {
+            this._selectedCurrency = selectedCurrency;
+          });
         },
         value: _selectedCurrency,
       ),
